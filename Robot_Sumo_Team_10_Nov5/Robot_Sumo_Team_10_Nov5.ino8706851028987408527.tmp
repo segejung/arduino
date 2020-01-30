@@ -1,0 +1,148 @@
+//Team 10 Robot Sumo
+
+// Clockwise and counter-clockwise definitions.
+// Depending on how you wired your motors, you may need to swap.
+#define FORWARD 0
+#define REVERSE 1
+
+// Motor definitions 
+#define MOTOR_A 1
+#define MOTOR_B 0
+
+//Opponent sensor
+#define trigPin1 13
+#define echoPin1 12
+
+// Pin Assignments //
+//Default pins:
+#define DIRA 2 // Direction control for motor A
+#define PWMA 3  // PWM control (speed) for motor A
+#define DIRB 4 // Direction control for motor B
+#define PWMB 11 // PWM control (speed) for motor B
+
+// driveArdumoto drives 'motor' in 'dir' direction at 'spd' speed
+void driveA(byte motor, byte dir, byte spd)
+{
+  if (motor == MOTOR_A)
+  {
+    digitalWrite(DIRA, dir);
+    analogWrite(PWMA, spd);
+  }
+  else if (motor == MOTOR_B)
+  {
+    digitalWrite(DIRB, dir);
+    analogWrite(PWMB, spd);
+  }  
+}
+
+// stopArdumoto makes a motor stop
+void stopA(byte motor)
+{
+  driveA(motor, 0, 0);
+}
+
+
+// setupArdumoto initialize all pins
+void setupArdumoto()
+{
+  // All pins should be setup as outputs:
+  pinMode(PWMA, OUTPUT);
+  pinMode(PWMB, OUTPUT);
+  pinMode(DIRA, OUTPUT);
+  pinMode(DIRB, OUTPUT);
+
+  // Initialize all pins as low:
+  digitalWrite(PWMA, LOW);
+  digitalWrite(PWMB, LOW);
+  digitalWrite(DIRA, LOW);
+  digitalWrite(DIRB, LOW);
+}
+const int LineSensorPIN = A3; // Sensor output voltage
+const int LineSensorPIN2 = A4; 
+
+void setup(){
+  Serial.begin(9600);
+  setupArdumoto(); // Set all pins as outputs
+  pinMode(LineSensorPIN, INPUT); 
+  pinMode(LineSensorPIN2, INPUT);
+  pinMode(trigPin1, OUTPUT);
+  pinMode(echoPin1, INPUT);
+  randomSeed(analogRead(0));
+}
+
+void loop(){
+  float duration1, distance1;
+  digitalWrite(trigPin1, LOW);  // Added this line
+  delayMicroseconds(2); // Added this line
+  digitalWrite(trigPin1, HIGH);
+  delayMicroseconds(10); // Added this line
+  digitalWrite(trigPin1, LOW);
+  duration1 = pulseIn(echoPin1, HIGH);
+  distance1 = (duration1/2) / 29.1;
+
+  int proximityADC2 = analogRead(LineSensorPIN2);
+  float proximityV2 = 3;
+  //(float)proximityADC2 * 5.0/1023.0;
+  Serial.println(proximityV2);
+    
+  // Read in the ADC and convert it to a voltage:
+  int proximityADC = analogRead(LineSensorPIN);
+  float proximityV = 3;
+  //(float)proximityADC * 5.0 / 1023.0;
+  Serial.println(proximityV);
+
+  if (distance1 >= 40){
+    Serial.println("Out of range");
+  }
+  else {
+    Serial.print(distance1);
+    Serial.println(" cm");
+  }
+  delay(500);
+  
+  /*
+  if (distance2 >= 25 || distance2 <= 0){
+    Serial.println("2 is Out of range");
+  }
+  else {
+    Serial.print(distance2);
+    Serial.println(" cm");
+  }
+  delay(0);
+*/
+
+  //default movement. searching for opponent tornado
+  driveA(MOTOR_A, FORWARD, 200);  
+  driveA(MOTOR_B, REVERSE, 200); 
+  
+  //if line sensor is off and opponent sensor turns on, charge
+  if ((proximityV > 2.8)&&(proximityV2 > 2.8)) { //adjust the voltage value with the new mount. See at what value it sees black to white. 
+    if (distance1 < 40) {
+      driveA(MOTOR_A, FORWARD, 255);  // you can adjust the speed
+      driveA(MOTOR_B, FORWARD, 255); 
+    
+    }
+
+  }  
+  //If line sensor is on, go reverse for __ seconds
+  if  (proximityV < 2.7) {
+    driveA(MOTOR_A, REVERSE, 255);  
+    driveA(MOTOR_B, REVERSE, 255); 
+    delay(700);
+    
+  }
+  //If line sensor is on, go reverse for __ seconds
+  if  (proximityV2 < 2.7) {
+    driveA(MOTOR_A, FORWARD, 255);  
+    driveA(MOTOR_B, FORWARD, 255); 
+    delay(700);
+ 
+  }
+
+ 
+
+
+}
+
+
+
